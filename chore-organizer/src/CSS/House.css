@@ -1,0 +1,26 @@
+.HouseSelect{
+  border-radius: 25px;
+  background: #73AD21;
+  padding: 20px;
+  width: 200px;
+  height: 200px; 
+  font-size: 10px;
+}
+
+.HouseSelect:hover{
+    background: #82cf16;
+    cursor: pointer;
+  }
+
+.OuterBorder{
+    padding: 20px; 
+}
+
+.OfferCantSelect{
+    border-radius: 25px;
+    background: #486919;
+    padding: 20px;
+    width: 200px;
+    height: 200px; 
+    font-size: 10px;
+  }

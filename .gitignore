@@ -1,0 +1,25 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+chore-organizer/node_modules
+chore-organizer/.pnp
+chore-organizer/.pnp.js
+
+# testing
+chore-organizer/coverage
+
+# production
+chore-organizer/build
+
+# misc
+chore-organizer/.DS_Store
+chore-organizer/.env.local
+chore-organizer/.env.development.local
+chore-organizer/.env.test.local
+chore-organizer/.env.production.local
+
+chore-organizer/npm-debug.log*
+chore-organizer/yarn-debug.log*
+chore-organizer/yarn-error.log*
+
+server/api.db

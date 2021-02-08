@@ -1,0 +1,46 @@
+.grid-container {
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    grid-gap: 10px;
+    background-color: #008cff;
+    padding: 10px;
+    height:500px;
+  }
+  
+  .grid-container > div {
+    background-color: #282c34;
+    text-align: center;
+    padding: 20px 0;
+    font-size: 30px;
+  }
+  
+  .item-grid{
+    display: grid;
+    grid-template-rows: auto auto auto auto auto;
+    grid-gap: 10px;
+    height:100px;
+  }
+
+  .item-container > div {
+    background-color: #282c34;
+    text-align: center;
+    font-size: 30px;
+    border: 3px solid #f1f1f1;
+    padding: 20px;
+  }
+
+  .offer-item:hover{
+    font-size:10px;
+    background-color: #0055ff;
+    cursor:pointer;
+  }
+
+  .offer-item{
+    font-size:10px;
+  }
+
+  .accept-offer-item{
+    font-size:10px;
+  }
+
+
