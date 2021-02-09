@@ -1,8 +1,8 @@
 import React, {useContext, useEffect, useRef} from "react";
 import {useHistory} from 'react-router-dom';
-import './CSS/House.css'
+import '../../CSS/House.css'
 import Cookies from 'js-cookie';
-import {HouseIDContext} from './HouseIDContext';
+import {HouseIDContext} from '../../Contexts/HouseIDContext';
 
 const House = (props) => {
   let history = useHistory();

@@ -1,5 +1,5 @@
 import React from "react";
-import './CSS/House.css'
+import '../../CSS/House.css'
 
 const Chore = (props) => {
 

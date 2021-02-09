@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import {useHistory} from 'react-router-dom';
-import './CSS/House.css'
-import {OfferContext} from './OfferContext'
+import '../../CSS/House.css'
+import {OfferContext} from '../../Contexts/OfferContext'
 
 const HouseMember = (props) => {
   let history = useHistory();;

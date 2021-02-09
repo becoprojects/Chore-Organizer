@@ -23,3 +23,5 @@ chore-organizer/yarn-debug.log*
 chore-organizer/yarn-error.log*
 
 server/api.db
+
+chore-organizer/.eslintcache

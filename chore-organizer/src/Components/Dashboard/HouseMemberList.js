@@ -2,9 +2,9 @@ import React, { useState, useContext } from "react";
 import {useHistory} from 'react-router-dom';
 import Cookies from 'js-cookie';
 import HouseMember from './HouseMember'
-import './CSS/App.css'
-import {getUsersByHouse,getOffersbyHouseandUser} from './utils/apiUtils'
-import {HouseIDContext} from './HouseIDContext'
+import '../../CSS/App.css'
+import {getUsersByHouse,getOffersbyHouseandUser} from '../../utils/apiUtils'
+import {HouseIDContext} from '../../Contexts/HouseIDContext'
 
 export default function HouseMemberList() {
     let history = useHistory();

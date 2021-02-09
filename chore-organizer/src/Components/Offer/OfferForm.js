@@ -1,10 +1,10 @@
 import React, { useState, useContext} from "react";
 import {useHistory, useLocation} from 'react-router-dom';
-import './CSS/OfferForm.css'
+import '../../CSS/OfferForm.css'
 import Cookies from 'js-cookie';
-import {ChoreContext} from './ChoreContext'
+import {ChoreContext} from '../../Contexts/ChoreContext'
 import OfferItem from './OfferItem'
-import {makeOffer} from "./utils/apiUtils"
+import {makeOffer} from "../../utils/apiUtils"
 
 function useQuery() {
     return new URLSearchParams(useLocation().search);

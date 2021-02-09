@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
-import './CSS/OfferForm.css'
-import {ChoreContext} from './ChoreContext'
+import '../../CSS/OfferForm.css'
+import {ChoreContext} from '../../Contexts/ChoreContext'
 
 const OfferItem = (props) => { 
     

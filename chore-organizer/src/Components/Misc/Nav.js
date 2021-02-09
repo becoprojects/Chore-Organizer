@@ -1,10 +1,9 @@
 import React, {useContext, useEffect, useRef} from "react";
 import {useHistory} from 'react-router-dom';
-import './CSS/House.css'
 import Cookies from 'js-cookie';
 import {Dropdown,NavItem,NavLink} from 'react-bootstrap'
-import {HouseContext} from './HouseContext'
-import {HouseIDContext} from './HouseIDContext'
+import {HouseContext} from '../../Contexts/HouseContext'
+import {HouseIDContext} from '../../Contexts/HouseIDContext'
 
 const Nav = (props) => {
   let history = useHistory();

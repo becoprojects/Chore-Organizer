@@ -1,19 +1,19 @@
 import React from 'react';
 import './CSS/App.css';
 import {BrowserRouter as Router, Switch, Route, Redirect} from 'react-router-dom';
-import Login from './Login';
-import HouseList from './HouseList';
-import AuthApi from './AuthApi';
+import Login from './Components/Login/Login';
+import HouseList from './Components/House/HouseList';
+import AuthApi from './Contexts/AuthApi';
 import Cookies from 'js-cookie';
-import HouseDashboard from './HouseDashboard'
-import Nav from './Nav'
-import OfferForm from './OfferForm';
-import {ChoreProvider} from './ChoreContext'
-import {OfferProvider} from './OfferContext'
-import {HouseProvider} from './HouseContext'
-import {HouseIDProvider} from './HouseIDContext'
-import AcceptOfferForm from './AcceptOfferForm'
-import ErrorPage from './ErrorPage'
+import HouseDashboard from './Components/Dashboard/HouseDashboard'
+import Nav from './Components/Misc/Nav'
+import OfferForm from './Components/Offer/OfferForm';
+import {ChoreProvider} from './Contexts/ChoreContext'
+import {OfferProvider} from './Contexts/OfferContext'
+import {HouseProvider} from './Contexts/HouseContext'
+import {HouseIDProvider} from './Contexts/HouseIDContext'
+import AcceptOfferForm from './Components/Offer/AcceptOfferForm'
+import ErrorPage from './Components/Misc/ErrorPage'
 
 function App(props) {
   const [auth,setAuth] = React.useState('');

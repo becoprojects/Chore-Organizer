@@ -1,8 +1,8 @@
 import React, { useState, useContext } from "react";
 import Button from "react-bootstrap/Button";
-import AuthApi from './AuthApi'
+import AuthApi from '../../Contexts/AuthApi'
 import Cookies from 'js-cookie';
-import './CSS/Login.css'
+import '../../CSS/Login.css'
 
 export default function Login() {
   const setAuth = useContext(AuthApi)[1];

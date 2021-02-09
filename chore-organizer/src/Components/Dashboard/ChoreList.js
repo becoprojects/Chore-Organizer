@@ -2,10 +2,10 @@ import React, { useState, useContext } from "react";
 import {useHistory} from 'react-router-dom';
 import Cookies from 'js-cookie';
 import Chore from './Chore'
-import './CSS/App.css'
-import {ChoreContext} from './ChoreContext'
-import {getChoresByHouse} from './utils/apiUtils'
-import {HouseIDContext} from './HouseIDContext'
+import '../../CSS/App.css'
+import {ChoreContext} from '../../Contexts/ChoreContext'
+import {getChoresByHouse} from '../../utils/apiUtils'
+import {HouseIDContext} from '../../Contexts/HouseIDContext'
 
 export default function ChoreList() {
     let history = useHistory();
