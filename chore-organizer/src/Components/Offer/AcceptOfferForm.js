@@ -5,7 +5,7 @@ import Cookies from 'js-cookie';
 import {ChoreContext} from '../../Contexts/ChoreContext'
 import AcceptOfferItem from './AcceptOfferItem'
 import {OfferContext} from '../../Contexts/OfferContext'
-import {acceptOffer, getOfferedChoresByOffer} from '../../utils/apiUtils'
+import {acceptOffer, getOfferedChoresByOffer, rejectOffer} from '../../utils/apiUtils'
 
 function useQuery() {
     return new URLSearchParams(useLocation().search);
@@ -67,6 +67,18 @@ const AcceptOfferForm = (props) => {
       });
   }
 
+  const rejectOfferFunc = () => {
+    rejectOffer(offer.offer_id)
+    .then((res) => {
+      if(res === null){
+          history.push("/errorscreen");
+      }
+      else{
+          history.push("/chores");
+      }
+    });
+}
+
   return (
     <div>
     <div className="grid-container">
@@ -88,6 +100,7 @@ const AcceptOfferForm = (props) => {
         </div>
     </div>
     <button onClick={acceptOfferFunc}>Accept Offer</button>
+    <button onClick={rejectOfferFunc} >Reject Offer</button>
     </div>
   );
 }
