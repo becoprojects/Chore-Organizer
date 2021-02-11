@@ -4,6 +4,7 @@ import Cookies from 'js-cookie';
 import {Dropdown,NavItem,NavLink} from 'react-bootstrap'
 import {HouseContext} from '../../Contexts/HouseContext'
 import {HouseIDContext} from '../../Contexts/HouseIDContext'
+import Notifications from './Notifications'
 
 const Nav = (props) => {
   let history = useHistory();
@@ -68,10 +69,10 @@ const Nav = (props) => {
           </Dropdown.Menu>
         </Dropdown>
       </ul>
-      <form className="form-inline my-2 my-lg-0">
-        <input className="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search"/>
-        <button className="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-      </form>
+
+      <Notifications>
+
+      </Notifications>
       </div>
     </nav>
   );

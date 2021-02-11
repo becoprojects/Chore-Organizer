@@ -536,6 +536,40 @@ class OfferReject(Resource):
         response['response'] = data
         return response, 200
 
+class NotificationsGetByUser(Resource):
+    def get(self,user_id):
+        @after_this_request
+        def add_header(response):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            return response
+
+        response = {"response": {}, "message": "", "returncode": 200}
+        try:
+            conn = sqlite3.connect('api.db')
+            s = conn.execute("SELECT * FROM NOTIFICATIONS WHERE USERID={0} AND ISREAD=FALSE;".format(user_id))
+        except Exception as e:
+            response['message'] = "Failed with the following error: {0}".format(e)
+            response['returncode'] = 500
+            return response, 500
+        data = []
+        for row in s:
+            temp = {}
+            temp['notification_id'] = row[0]
+            temp['title'] = row[1]
+            temp['description'] = row[2]
+            temp['is_read'] = row[3]
+            temp['user_id'] = row[4]
+            data.append(temp)
+        conn.close()
+        if len(data) < 1:
+            response['message'] = "could not any chores for offer with id {0}".format(offer_id)
+            response['returncode'] = 200
+            return response, 200
+        response['message'] = "search successful"
+        response['response'] = data
+        return response, 200
+
+
 
 
 api.add_resource(UserAdd, "/adduser")
@@ -550,6 +584,7 @@ api.add_resource(OfferAdd, "/addoffer")
 api.add_resource(OffersGetByHouseandUser, "/getoffersbyhouseanduser/<int:house_id>/<int:user_id>")
 api.add_resource(OfferedChoresGetByOffer, "/getofferedchoresbyoffer/<int:offer_id>")
 api.add_resource(OfferAccept, "/acceptoffer/<int:offer_id>")
+api.add_resource(NotificationsGetByUser, "/getnotificationsbyuser/<int:user_id>")
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

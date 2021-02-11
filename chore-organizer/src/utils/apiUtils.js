@@ -123,3 +123,18 @@ export async function getOfferedChoresByOffer(offerID){
         return null;
     }
 }
+
+export async function getNotificationsByUser(userID){
+    try{
+        const res = await axios.get(base + "/getnotificationsbyuser/" + userID);
+        if(res.status === 200){
+            return res.data.response;
+        }   
+        else{
+            return null;
+        }
+    }
+    catch(Exception){
+        return null;
+    }
+}
