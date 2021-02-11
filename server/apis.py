@@ -535,7 +535,6 @@ class OfferReject(Resource):
         response['message'] = "delete successful"
         return response, 200
 
-<<<<<<< HEAD
 class NotificationsGetByUser(Resource):
     def get(self,user_id):
         @after_this_request
@@ -569,11 +568,6 @@ class NotificationsGetByUser(Resource):
         response['response'] = data
         return response, 200
 
-
-
-
-=======
->>>>>>> adf6af8a35550f7b6a009e5f2e2a8d63e2811785
 api.add_resource(UserAdd, "/adduser")
 api.add_resource(HouseAdd, "/addhouse")
 api.add_resource(HouseGetByUser, "/gethousesbyuser/<int:id>")
@@ -586,11 +580,8 @@ api.add_resource(OfferAdd, "/addoffer")
 api.add_resource(OffersGetByHouseandUser, "/getoffersbyhouseanduser/<int:house_id>/<int:user_id>")
 api.add_resource(OfferedChoresGetByOffer, "/getofferedchoresbyoffer/<int:offer_id>")
 api.add_resource(OfferAccept, "/acceptoffer/<int:offer_id>")
-<<<<<<< HEAD
 api.add_resource(NotificationsGetByUser, "/getnotificationsbyuser/<int:user_id>")
-=======
 api.add_resource(OfferReject, "/rejectoffer/<int:offer_id>")
->>>>>>> adf6af8a35550f7b6a009e5f2e2a8d63e2811785
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
