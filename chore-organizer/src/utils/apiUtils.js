@@ -124,6 +124,21 @@ export async function getOfferedChoresByOffer(offerID){
     }
 }
 
+export async function rejectOffer(offerID){
+    try{
+        const res = await axios.delete(base + "/rejectoffer/" + offerID);
+        if(res.status === 200){
+            return res.data;
+        }   
+        else{
+            return null;
+        }
+    }
+    catch(Exception){
+        return null;
+    }
+}
+
 export async function getNotificationsByUser(userID){
     try{
         const res = await axios.get(base + "/getnotificationsbyuser/" + userID);

@@ -504,7 +504,17 @@ class OfferAccept(Resource):
         return response, 200
 
 class OfferReject(Resource):
-    def delete(offer_id):
+    def options(self,offer_id):
+        @after_this_request
+        def add_header(response):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Allow-Headers'] = '*'
+            response.headers['Access-Control-Allow-Methods'] = '*'
+            return response
+
+        return 200;
+
+    def delete(self,offer_id):
         @after_this_request
         def add_header(response):
             response.headers['Access-Control-Allow-Origin'] = '*'
@@ -514,28 +524,18 @@ class OfferReject(Resource):
 
         try:
             conn = sqlite3.connect('api.db')
-            s = conn.execute(
-                "SELECT * FROM OFFEREDCHORES WHERE OFFERID={0};".format(offer_id))
+            conn.execute("DELETE FROM OFFEREDCHORES WHERE OFFERID={0};".format(offer_id))
+            conn.execute("DELETE FROM OFFERS WHERE OFFERID={0};".format(offer_id))
         except Exception as e:
             response['message'] = "Failed with the following error: {0}".format(e)
             response['returncode'] = 500
             return response, 500
-        data = []
-        for row in s:
-            temp = {}
-            temp['order_id'] = row[0]
-            temp['chore_id'] = row[1]
-            temp['offer_side'] = row[2]
-            data.append(temp)
+        conn.commit()
         conn.close()
-        if len(data) < 1:
-            response['message'] = "could not any chores for offer with id {0}".format(offer_id)
-            response['returncode'] = 400
-            return response, 400
-        response['message'] = "search successful"
-        response['response'] = data
+        response['message'] = "delete successful"
         return response, 200
 
+<<<<<<< HEAD
 class NotificationsGetByUser(Resource):
     def get(self,user_id):
         @after_this_request
@@ -572,6 +572,8 @@ class NotificationsGetByUser(Resource):
 
 
 
+=======
+>>>>>>> adf6af8a35550f7b6a009e5f2e2a8d63e2811785
 api.add_resource(UserAdd, "/adduser")
 api.add_resource(HouseAdd, "/addhouse")
 api.add_resource(HouseGetByUser, "/gethousesbyuser/<int:id>")
@@ -584,7 +586,11 @@ api.add_resource(OfferAdd, "/addoffer")
 api.add_resource(OffersGetByHouseandUser, "/getoffersbyhouseanduser/<int:house_id>/<int:user_id>")
 api.add_resource(OfferedChoresGetByOffer, "/getofferedchoresbyoffer/<int:offer_id>")
 api.add_resource(OfferAccept, "/acceptoffer/<int:offer_id>")
+<<<<<<< HEAD
 api.add_resource(NotificationsGetByUser, "/getnotificationsbyuser/<int:user_id>")
+=======
+api.add_resource(OfferReject, "/rejectoffer/<int:offer_id>")
+>>>>>>> adf6af8a35550f7b6a009e5f2e2a8d63e2811785
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
