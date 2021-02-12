@@ -357,6 +357,9 @@ class OfferAdd(Resource):
                     getOfferedPlacementID = conn.execute('SELECT last_insert_rowid() FROM OFFEREDPLACEMENT;')
                     temp['offered_placement_id'] = getOfferedPlacementID.fetchone()[0]
                     args['offeredPlacements'].append(temp)
+
+            conn.execute("INSERT INTO NOTIFICATIONS(TITLE,DESCRIPTION,ISREAD,USERID) " +
+                "VALUES('{0}','{1}',FALSE,{2})".format("New Offer","An Offer is waiting for you",args['receiving_id']))
         except Exception as e:
             traceback.print_exc()
             response['message'] = "Failed with the following error: {0}".format(e)
@@ -535,14 +538,14 @@ class OfferReject(Resource):
         response['message'] = "delete successful"
         return response, 200
 
-class NotificationsGetByUser(Resource):
+class NotificationsGetUnseenByUser(Resource):
     def get(self,user_id):
         @after_this_request
         def add_header(response):
             response.headers['Access-Control-Allow-Origin'] = '*'
             return response
 
-        response = {"response": {}, "message": "", "returncode": 200}
+        response = {"response": [], "message": "", "returncode": 200}
         try:
             conn = sqlite3.connect('api.db')
             s = conn.execute("SELECT * FROM NOTIFICATIONS WHERE USERID={0} AND ISREAD=FALSE;".format(user_id))
@@ -561,11 +564,92 @@ class NotificationsGetByUser(Resource):
             data.append(temp)
         conn.close()
         if len(data) < 1:
-            response['message'] = "could not any chores for offer with id {0}".format(offer_id)
+            response['message'] = "could not any notifications for user with id {0}".format(user_id)
             response['returncode'] = 200
             return response, 200
         response['message'] = "search successful"
         response['response'] = data
+        return response, 200
+
+class NotificationsSetSeen(Resource):
+    def options(self):
+        @after_this_request
+        def add_header(response):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Allow-Headers'] = '*'
+            response.headers['Access-Control-Allow-Methods'] = '*'
+            return response
+
+        return 200;
+
+    def put(self):
+        @after_this_request
+        def add_header(response):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            return response
+
+        response = {"response": {}, "message": "", "returncode": 200}
+
+        args = request.get_json()
+        required_fields = ['notification_id_list']
+        if not all(x in args.keys() for x in required_fields):
+            response['message'] = "The fields {0} are required to add an offer. Received: {1}".format(required_fields,args)
+            response['returncode'] = 500
+            return response, 500
+
+        try:
+            conn = sqlite3.connect('api.db')
+            for id in args['notification_id_list']:
+                conn.execute("UPDATE NOTIFICATIONS SET ISREAD=TRUE WHERE NOTIFICATIONID={0};".format(id))
+        except Exception as e:
+            response['message'] = "Failed with the following error: {0}".format(e)
+            response['returncode'] = 500
+            return response, 500
+        conn.commit()
+        conn.close()
+        response['message'] = "put successful"
+        return response, 200
+
+class NotificationAdd(Resource):
+    def options(self):
+        @after_this_request
+        def add_header(response):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Allow-Headers'] = '*'
+            response.headers['Access-Control-Allow-Methods'] = '*'
+            return response
+
+        return 200;
+
+    def post(self):
+        @after_this_request
+        def add_header(response):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            return response
+
+        response = {"response": {}, "message": "", "returncode": 200}
+
+        args = request.get_json()
+        required_fields = ['title','description','user_id']
+        if not all(x in args.keys() for x in required_fields):
+            response['message'] = "The fields {0} are required to add an offer. Received: {1}".format(required_fields,args)
+            response['returncode'] = 500
+            return response, 500
+
+        try:
+            conn = sqlite3.connect('api.db')
+            conn.execute("INSERT INTO NOTIFICATIONS(TITLE,DESCRIPTION,ISREAD,USERID) " +
+                         "VALUES('{0}','{1}',FALSE,{2})".format(args['title'],args['description'],args['user_id']))
+            notificationID = conn.execute('SELECT last_insert_rowid() FROM NOTIFICATIONS;')
+        except Exception as e:
+            response['message'] = "Failed with the following error: {0}".format(e)
+            response['returncode'] = 500
+            return response, 500
+        conn.commit()
+        conn.close()
+        response['message'] = "add successful"
+        response['response'] = {'notification_id':notificationID,'title':args['title'],'description':args['description'],
+                                'is_read':0,'user_id':args[user_id]}
         return response, 200
 
 api.add_resource(UserAdd, "/adduser")
@@ -580,8 +664,10 @@ api.add_resource(OfferAdd, "/addoffer")
 api.add_resource(OffersGetByHouseandUser, "/getoffersbyhouseanduser/<int:house_id>/<int:user_id>")
 api.add_resource(OfferedChoresGetByOffer, "/getofferedchoresbyoffer/<int:offer_id>")
 api.add_resource(OfferAccept, "/acceptoffer/<int:offer_id>")
-api.add_resource(NotificationsGetByUser, "/getnotificationsbyuser/<int:user_id>")
+api.add_resource(NotificationsGetUnseenByUser, "/getunseennotificationsbyuser/<int:user_id>")
 api.add_resource(OfferReject, "/rejectoffer/<int:offer_id>")
+api.add_resource(NotificationsSetSeen, "/setseennotifications")
+api.add_resource(NotificationAdd,"/addnotification")
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
