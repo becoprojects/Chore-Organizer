@@ -138,3 +138,33 @@ export async function rejectOffer(offerID){
         return null;
     }
 }
+
+export async function getUnseenNotificationsByUser(userID){
+    try{
+        const res = await axios.get(base + "/getunseennotificationsbyuser/" + userID);
+        if(res.status === 200){
+            return res.data.response;
+        }   
+        else{
+            return null;
+        }
+    }
+    catch(Exception){
+        return null;
+    }
+}
+
+export async function setSeenNotifications(data){
+    try{
+        const res = await axios.put(base + "/setseennotifications",data);
+        if(res.status === 200){
+            return res.data.response;
+        }   
+        else{
+            return null;
+        }
+    }
+    catch(Exception){
+        return null;
+    }
+}

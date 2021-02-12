@@ -1,3 +1,7 @@
 .CustomDropdown{
     background-color: transparent;
 }
+
+.NotificationDiv:hover{
+    background-color: lightblue;
+}

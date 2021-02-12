@@ -10,7 +10,6 @@ const OfferItem = (props) => {
       let temp = [...chores];
       temp[props.id].selected = !temp[props.id].selected;
       setChores(temp);
-      //console.log(temp)
   }
 
   return (
