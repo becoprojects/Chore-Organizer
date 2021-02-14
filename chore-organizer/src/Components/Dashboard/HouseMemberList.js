@@ -10,7 +10,7 @@ export default function HouseMemberList() {
     let history = useHistory();
     const [houseMemberList,setHouseMemberList] = useState([]);
     const [offerList,setOfferList] = useState([]);
-    const houseID = useContext(HouseIDContext)[0];
+    const houseID = useContext(HouseIDContext)[0].house_id;
 
     React.useEffect(() => {
         const userID = Cookies.get("id");

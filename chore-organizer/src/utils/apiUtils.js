@@ -69,13 +69,13 @@ export async function getOffersbyHouseandUser(houseID,userID){
     }
 }
 
-export async function makeOffer(houseID,askingID,receivingID,chores){
+export async function makeOffer(houseID,askingID,receivingID,chores,placements){
     let json_input = {
         'house_id':parseInt(houseID),
         'asking_id':parseInt(askingID),
         'receiving_id':parseInt(receivingID),
         'chores':chores,
-        'placements':[]}
+        'placements':placements}
         console.log(json_input);
     try{
         const res = await axios.post(base + "/addoffer",json_input);
@@ -157,6 +157,66 @@ export async function getUnseenNotificationsByUser(userID){
 export async function setSeenNotifications(data){
     try{
         const res = await axios.put(base + "/setseennotifications",data);
+        if(res.status === 200){
+            return res.data.response;
+        }   
+        else{
+            return null;
+        }
+    }
+    catch(Exception){
+        return null;
+    }
+}
+
+export async function getCurrentPlacementByHouse(houseID){
+    try{
+        const res = await axios.get(base + "/getcurrentplacementbyhouse/" + houseID);
+        if(res.status === 200){
+            return res.data.response;
+        }   
+        else{
+            return null;
+        }
+    }
+    catch(Exception){
+        return null;
+    }
+}
+
+export async function makeDraftPick(userID,choreID){
+    try{
+        const res = await axios.put(base + "/makedraftpick/" + userID + "/" + choreID);
+        if(res.status === 200){
+            return res.data;
+        }   
+        else{
+            return null;
+        }
+    }
+    catch(Exception){
+        return null;
+    }
+}
+
+export async function getPlacementsByHouseandUser(houseID,userID){
+    try{
+        const res = await axios.get(base + "/getplacementsbyhouseanduser/" + houseID + "/" + userID);
+        if(res.status === 200){
+            return res.data.response;
+        }   
+        else{
+            return null;
+        }
+    }
+    catch(Exception){
+        return null;
+    }
+}
+
+export async function getOfferedPlacementsByOffer(offerID){
+    try{
+        const res = await axios.get(base + "/getofferedplacementsbyoffer/" + offerID);
         if(res.status === 200){
             return res.data.response;
         }   

@@ -25,7 +25,7 @@ export default function HouseList() {
 
     return (
         <div className="HouseList">
-            {houseList.map((house) => (<House key={house.house_id} house_id={house.house_id} name={house.name} description={house.description}/>))}
+            {houseList.map((house) => (<House key={house.house_id} house_id={house.house_id} name={house.name} description={house.description} phase={house.current_phase}/>))}
         </div>
     );
 }

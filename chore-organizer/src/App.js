@@ -12,8 +12,10 @@ import {ChoreProvider} from './Contexts/ChoreContext'
 import {OfferProvider} from './Contexts/OfferContext'
 import {HouseProvider} from './Contexts/HouseContext'
 import {HouseIDProvider} from './Contexts/HouseIDContext'
+import {PlacementProvider} from './Contexts/PlacementContext'
 import AcceptOfferForm from './Components/Offer/AcceptOfferForm'
 import ErrorPage from './Components/Misc/ErrorPage'
+import DraftPage from './Components/Draft/DraftPage'
 
 function App(props) {
   const [auth,setAuth] = React.useState('');
@@ -43,8 +45,11 @@ function App(props) {
               <ChoreProvider>
               <OfferProvider>
                 <ProtectedRoute cooks={['id','currentHouseID']} redirectLinks={['/','/houses']} path="/chores" component={HouseDashboard}/>
-                <ProtectedRoute cooks={['id','currentHouseID']} redirectLinks={['/','/houses']} path="/makeoffer" component={OfferForm}/>
-                <ProtectedRoute cooks={['id','currentHouseID']} redirectLinks={['/','/houses']} path="/acceptoffer" component={AcceptOfferForm}/>
+                <PlacementProvider>
+                  <ProtectedRoute cooks={['id','currentHouseID']} redirectLinks={['/','/houses']} path="/makeoffer" component={OfferForm}/>
+                  <ProtectedRoute cooks={['id','currentHouseID']} redirectLinks={['/','/houses']} path="/acceptoffer" component={AcceptOfferForm}/>
+                </PlacementProvider>
+                <ProtectedRoute cooks={['id','currentHouseID']} redirectLinks={['/','/houses']} path="/draft" component={DraftPage}/>
               </OfferProvider>
               </ChoreProvider>    
           </Switch>

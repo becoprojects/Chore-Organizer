@@ -10,16 +10,22 @@ const House = (props) => {
   const isFirstRender = useRef(true);
 
   const enterHouse = async () => {
-    await setHouseID(props.house_id)
-    console.log(houseID);
+    const house_recreate = {
+      house_id: props.house_id,
+      name: props.name,
+      description: props.description,
+      current_phase: props.phase
+    }
+    setHouseID(house_recreate)
   }
 
   useEffect(() => {
     if(!isFirstRender.current){
-      Cookies.set("currentHouseID",houseID);
+      Cookies.set("currentHouseID",houseID.house_id);
+      console.log(houseID);
       history.push("/chores")
     }
-  },[houseID,history])
+  },[houseID])
 
   useEffect(() => { 
     isFirstRender.current = false;
