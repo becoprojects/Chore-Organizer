@@ -27,13 +27,13 @@ const Nav = (props) => {
     history.push("/houses");
   }
 
-  const enterHouse = (house_id) => {
-    setHouseID(house_id)
+  const enterHouse = (house) => {
+    setHouseID(house)
   }
 
   useEffect(() => {
     if(!isFirstRender.current){
-      Cookies.set("currentHouseID",houseID);
+      Cookies.set("currentHouseID",houseID.house_id);
       history.push("/chores")
     }
   },[houseID,history])
@@ -64,10 +64,11 @@ const Nav = (props) => {
 
           <Dropdown.Menu>
             {houseList.map((house) => 
-              (<Dropdown.Item onClick={() => enterHouse(house.house_id)}>{house.name}</Dropdown.Item>)
+              (<Dropdown.Item onClick={() => enterHouse(house)}>{house.name}</Dropdown.Item>)
             )}
           </Dropdown.Menu>
         </Dropdown>
+        <a className="nav-link" onClick={() => history.push("/draft")}>Draft</a>
       </ul>
 
       <Notifications>

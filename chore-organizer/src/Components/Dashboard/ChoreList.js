@@ -10,7 +10,7 @@ import {HouseIDContext} from '../../Contexts/HouseIDContext'
 export default function ChoreList() {
     let history = useHistory();
     const [chores,setChores] = useContext(ChoreContext);
-    const houseID = useContext(HouseIDContext)[0];
+    const houseID = useContext(HouseIDContext)[0].house_id;
     const userID = useState(parseInt(Cookies.get("id")))[0];
 
     React.useEffect(() => {

@@ -49,7 +49,7 @@ class HouseGetByUser(Resource):
         response = {"response": {}, "message": "", "returncode": 200}
         try:
             conn = sqlite3.connect('api.db')
-            s = conn.execute("SELECT HOUSES.HOUSEID, HOUSES.NAME, HOUSES.DESCRIPTION " +
+            s = conn.execute("SELECT HOUSES.HOUSEID, HOUSES.NAME, HOUSES.DESCRIPTION, HOUSES.CURRENTPHASE " +
                             "FROM HOUSES INNER JOIN USERSTOHOUSES ON HOUSES.HOUSEID=USERSTOHOUSES.HOUSEID " +
                             "INNER JOIN USERS ON USERS.USERID=USERSTOHOUSES.USERID " +
                             "WHERE USERS.USERID = {0}".format(id))
@@ -63,6 +63,7 @@ class HouseGetByUser(Resource):
             temp['house_id'] = row[0]
             temp['name'] = row[1]
             temp['description'] = row[2]
+            temp['current_phase'] = row[3]
             data.append(temp)
         conn.close()
         if len(data) < 1:
@@ -289,13 +290,14 @@ class OfferAdd(Resource):
 
         response = {"response": {}, "message": "", "returncode": 200}
         args = request.get_json()
+        print(args)
         required_fields = ['house_id', 'asking_id', 'receiving_id']
         if not all(x in args.keys() for x in required_fields) or (('chores' not in args.keys()) and ('placements' not in args.keys())):
             response['message'] = "The fields {0} are required to add an offer. Received: {1}".format(required_fields,args.keys())
             response['returncode'] = 500
             return response, 500
-        args['offeredChores'] = []
-        args['offeredPlacements'] = []
+        args['offered_chores'] = []
+        args['offered_placements'] = []
         args['house_id'] = int(args['house_id'])
         args['asking_id'] = int(args['asking_id'])
         args['receiving_id'] = int(args['receiving_id'])
@@ -310,7 +312,7 @@ class OfferAdd(Resource):
             conn.execute("PRAGMA foreign_keys = ON;")
             conn.execute("INSERT INTO OFFERS(HOUSEID,ASKINGID,RECEIVINGID,STATUS) " +
                          "VALUES({0}, {1}, {2}, 'u')".format(args['house_id'],args['asking_id'],args['receiving_id']))
-            getOfferID = conn.execute('SELECT last_insert_rowid() from USERS;')
+            getOfferID = conn.execute('SELECT last_insert_rowid() from OFFERS;')
             offerID = getOfferID.fetchone()[0]
 
             if 'chores' in args.keys():
@@ -334,17 +336,18 @@ class OfferAdd(Resource):
                                  "VALUES({0},{1},'{2}')".format(offerID,chore,temp['offer_side']))
                     getOfferedChoreID = conn.execute('SELECT last_insert_rowid() FROM OFFEREDCHORES;')
                     temp['offered_chore_id'] = getOfferedChoreID.fetchone()[0]
-                    args['offeredChores'].append(temp)
+                    args['offered_chores'].append(temp)
             if 'placements' in args.keys():
                 for placement in args['placements']:
                     temp = {"id": placement}
-                    s = conn.execute("SELECT * FROM CHORES WHERE CHOREID={0}".format(placement)).fetchone()
+                    s = conn.execute("SELECT * FROM PLACEMENTS WHERE PLACEMENTID={0}".format(placement)).fetchone()
                     if s:
-                        if (s[4] == args["asking_id"]):
+                        if (s[1] == args["asking_id"]):
                             temp["offer_side"] = "a"
-                        elif (s[4] == args["receiving_id"]):
+                        elif (s[1] == args["receiving_id"]):
                             temp["offer_side"] = "r"
                         else:
+                            traceback.print_exc()
                             response['message'] = "Placements were formatted incorrectly."
                             response['returncode'] = 500
                             return response, 500
@@ -352,11 +355,13 @@ class OfferAdd(Resource):
                         response['message'] = "Placements were formatted incorrectly."
                         response['returncode'] = 500
                         return response, 500
+                    print("INSERT INTO OFFEREDPLACEMENTS(OFFERID,PLACEMENTID,OFFERSIDE) " +
+                                 "VALUES({0},{1},'{2}')".format(offerID, placement, temp['offer_side']))
                     conn.execute("INSERT INTO OFFEREDPLACEMENTS(OFFERID,PLACEMENTID,OFFERSIDE) " +
                                  "VALUES({0},{1},'{2}')".format(offerID, placement, temp['offer_side']))
-                    getOfferedPlacementID = conn.execute('SELECT last_insert_rowid() FROM OFFEREDPLACEMENT;')
+                    getOfferedPlacementID = conn.execute('SELECT last_insert_rowid() FROM OFFEREDPLACEMENTS;')
                     temp['offered_placement_id'] = getOfferedPlacementID.fetchone()[0]
-                    args['offeredPlacements'].append(temp)
+                    args['offered_placements'].append(temp)
 
             conn.execute("INSERT INTO NOTIFICATIONS(TITLE,DESCRIPTION,ISREAD,USERID) " +
                 "VALUES('{0}','{1}',FALSE,{2})".format("New Offer","An Offer is waiting for you",args['receiving_id']))
@@ -369,7 +374,7 @@ class OfferAdd(Resource):
         conn.close()
         response['message'] = "Successfully added new new Offer"
         response['response'] = {'offer_id': offerID, 'house_id': args['house_id'], 'asking_id': args['asking_id'],
-                                'receiving_id': args['receiving_id'], 'status': 'u','offeredChores':args['offeredChores'], 'offeredPlacements':args['offeredPlacements']}
+                                'receiving_id': args['receiving_id'], 'status': 'u','offered_chores':args['offered_chores'], 'offered_placements':args['offered_placements']}
         if 'chores' in args.keys():
             response['response']['chores'] = args['chores']
         if 'placements' in args.keys():
@@ -404,7 +409,7 @@ class OffersGetByHouseandUser(Resource):
             data.append(temp)
         conn.close()
         if len(data) < 1:
-            response['message'] = "could not any orders for house with id {0} and user with id {1}".format(house_id,user_id)
+            response['message'] = "could not any offers for house with id {0} and user with id {1}".format(house_id,user_id)
             response['returncode'] = 400
             return response, 400
         response['message'] = "search successful"
@@ -418,7 +423,7 @@ class OfferedChoresGetByOffer(Resource):
             response.headers['Access-Control-Allow-Origin'] = '*'
             return response
 
-        response = {"response": {}, "message": "", "returncode": 200}
+        response = {"response": [], "message": "", "returncode": 200}
         try:
             conn = sqlite3.connect('api.db')
             s = conn.execute(
@@ -430,15 +435,15 @@ class OfferedChoresGetByOffer(Resource):
         data = []
         for row in s:
             temp = {}
-            temp['order_id'] = row[0]
+            temp['offer_id'] = row[0]
             temp['chore_id'] = row[1]
             temp['offer_side'] = row[2]
             data.append(temp)
         conn.close()
         if len(data) < 1:
             response['message'] = "could not any chores for offer with id {0}".format(offer_id)
-            response['returncode'] = 400
-            return response, 400
+            response['returncode'] = 200
+            return response, 200
         response['message'] = "search successful"
         response['response'] = data
         return response, 200
@@ -478,13 +483,29 @@ class OfferAccept(Resource):
                 offer['status'] = row[4]
             s = conn.execute("SELECT OFFEREDCHORES.CHOREID,CHORES.OWNERID FROM OFFEREDCHORES JOIN CHORES ON OFFEREDCHORES.CHOREID=CHORES.CHOREID WHERE OFFEREDCHORES.OFFERID={0};".format(offer_id))
             choresInOffer = []
+            placementsInOffer = []
             for row in s:
                 if(row[1] == offer['asking_id']):
                     conn.execute("UPDATE CHORES SET OWNERID={0} WHERE CHOREID={1}".format(offer['receiving_id'],row[0]))
                 elif(row[1] == offer['receiving_id']):
                     conn.execute("UPDATE CHORES SET OWNERID={0} WHERE CHOREID={1}".format(offer['asking_id'],row[0]))
                 choresInOffer.append(row[0])
+            s = conn.execute("SELECT OFFEREDPLACEMENTS.PLACEMENTID, PLACEMENTS.USERID " +
+                             "FROM OFFEREDPLACEMENTS JOIN PLACEMENTS ON OFFEREDPLACEMENTS.PLACEMENTID=PLACEMENTS.PLACEMENTID WHERE OFFERID={0};".format(offer_id))
+            for row in s:
+                if(row[1] == offer['asking_id']):
+                    conn.execute("UPDATE PLACEMENTS SET USERID={0} WHERE PLACEMENTID={1}".format(offer['receiving_id'],row[0]))
+                    count = conn.execute("SELECT COUNT(*) FROM REVERTPLACEMENTS WHERE PLACEMENTID={0}".format(row[0])).fetchone()[0]
+                    if count == 0:
+                        conn.execute("INSERT INTO REVERTPLACEMENTS(REVERTTO,PLACEMENTID) VALUES({0},{1});".format(offer['asking_id'],row[0]))
+                elif(row[1] == offer['receiving_id']):
+                    conn.execute("UPDATE PLACEMENTS SET USERID={0} WHERE PLACEMENTID={1}".format(offer['asking_id'],row[0]))
+                    count = conn.execute("SELECT COUNT(*) FROM REVERTPLACEMENTS WHERE PLACEMENTID={0}".format(row[0])).fetchone()[0]
+                    if count == 0:
+                        conn.execute("INSERT INTO REVERTPLACEMENTS(REVERTTO,PLACEMENTID) VALUES({0},{1});".format(offer['receiving_id'],row[0]))
+                placementsInOffer.append(row[0])
             conn.execute("DELETE FROM OFFEREDCHORES WHERE OFFERID={0}".format(offer_id))
+            conn.execute("DELETE FROM OFFEREDPLACEMENTS WHERE OFFERID={0}".format(offer_id))
             conn.execute("DELETE FROM OFFERS WHERE OFFERID={0}".format(offer_id))
 
             offersDeleted = []
@@ -492,9 +513,16 @@ class OfferAccept(Resource):
                 s = conn.execute("SELECT OFFERID FROM OFFEREDCHORES WHERE CHOREID={0}".format(chore))
                 for row in s:
                     conn.execute("DELETE FROM OFFEREDCHORES WHERE OFFERID={0}".format(row[0]))
+                    conn.execute("DELETE FROM OFFEREDPLACEMENTS WHERE OFFERID={0}".format(row[0]))
                     conn.execute("DELETE FROM OFFERS WHERE OFFERID={0}".format(row[0]))
                     offersDeleted.append(row[0])
-
+            for placement in placementsInOffer:
+                s = conn.execute("SELECT OFFERID FROM OFFEREDPLACEMENTS WHERE PLACEMENTID={0}".format(placement))
+                for row in s:
+                    conn.execute("DELETE FROM OFFEREDCHORES WHERE OFFERID={0}".format(row[0]))
+                    conn.execute("DELETE FROM OFFEREDPLACEMENTS WHERE OFFERID={0}".format(row[0]))
+                    conn.execute("DELETE FROM OFFERS WHERE OFFERID={0}".format(row[0]))
+                    offersDeleted.append(row[0])
         except Exception as e:
             traceback.print_exc()
             response['message'] = "Failed with the following error: {0}".format(e)
@@ -502,7 +530,7 @@ class OfferAccept(Resource):
             return response, 500
         conn.commit()
         conn.close()
-        response['message'] = "Successfully added new new Offer"
+        response['message'] = "Successfully accepted Offer"
         response['response'] = {'offersAffected': offersDeleted}
         return response, 200
 
@@ -528,6 +556,7 @@ class OfferReject(Resource):
         try:
             conn = sqlite3.connect('api.db')
             conn.execute("DELETE FROM OFFEREDCHORES WHERE OFFERID={0};".format(offer_id))
+            conn.execute("DELETE FROM OFFEREDPLACEMENTS WHERE OFFERID={0};".format(offer_id))
             conn.execute("DELETE FROM OFFERS WHERE OFFERID={0};".format(offer_id))
         except Exception as e:
             response['message'] = "Failed with the following error: {0}".format(e)
@@ -652,6 +681,203 @@ class NotificationAdd(Resource):
                                 'is_read':0,'user_id':args[user_id]}
         return response, 200
 
+class CurrentPlacementGetByHouse(Resource):
+    def get(self,house_id):
+        @after_this_request
+        def add_header(response):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            return response
+
+        response = {"response": [], "message": "", "returncode": 200}
+        try:
+            conn = sqlite3.connect('api.db')
+            s = conn.execute("SELECT * FROM PLACEMENTS JOIN HOUSES ON HOUSES.HOUSEID=PLACEMENTS.HOUSEID " +
+                             "WHERE PLACEMENTS.HOUSEID={0} AND PLACEMENTS.PLACE=HOUSES.CURRENTTURN AND FUTURECODE=0;".format(house_id))
+        except Exception as e:
+            response['message'] = "Failed with the following error: {0}".format(e)
+            response['returncode'] = 500
+            return response, 500
+        data = []
+        for row in s:
+            temp = {}
+            temp['placement_id'] = row[0]
+            temp['user_id'] = row[1]
+            temp['house_id'] = row[2]
+            temp['future_code'] = row[3]
+            temp['place'] = row[4]
+            data.append(temp)
+        conn.close()
+        if len(data) < 1:
+            response['message'] = "could not any notifications for user with id {0}".format(user_id)
+            response['returncode'] = 400
+            return response, 200
+        response['message'] = "search successful"
+        response['response'] = data[0]
+        return response, 200
+
+class MakeDraftPick(Resource):
+    def options(self,user_id,chore_id):
+        @after_this_request
+        def add_header(response):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Allow-Headers'] = '*'
+            response.headers['Access-Control-Allow-Methods'] = '*'
+            return response
+
+        return 200;
+
+    def put(self,user_id,chore_id):
+        @after_this_request
+        def add_header(response):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            return response
+
+        response = {"response": {}, "message": "", "returncode": 200}
+
+        try:
+            conn = sqlite3.connect('api.db')
+            house_id = conn.execute("SELECT HOUSEID FROM CHORES WHERE CHOREID={0}".format(chore_id)).fetchone()[0]
+            #conn.execute("PRAGMA foreign_keys = ON;")
+            [currentUser,currentPlace] = conn.execute("SELECT PLACEMENTS.USERID,PLACEMENTS.PLACE FROM PLACEMENTS JOIN HOUSES ON HOUSES.HOUSEID=PLACEMENTS.HOUSEID " +
+                             "WHERE PLACEMENTS.HOUSEID={0} AND PLACEMENTS.PLACE=HOUSES.CURRENTTURN AND FUTURECODE=0;".format(house_id)).fetchone()
+            if(currentUser != user_id):
+                response['message'] = "This user is not allowed to pick a chore yet"
+                response['returncode'] = 400
+                return response, 400
+            conn.execute("UPDATE CHORES SET CLAIMED=TRUE, OWNERID={0} WHERE CHOREID={1};".format(user_id,chore_id))
+            numChoresLeft = conn.execute("SELECT COUNT(*) FROM CHORES WHERE HOUSEID={0} AND CLAIMED=FALSE;".format(house_id)).fetchone()[0]
+            if(numChoresLeft > 0):
+                userCount = conn.execute("SELECT COUNT(*) FROM USERSTOHOUSES WHERE HOUSEID={0};".format(house_id)).fetchone()[0]
+                nextPlace = (currentPlace + 1)%userCount
+                conn.execute("UPDATE HOUSES SET CURRENTTURN={0} WHERE HOUSEID={1}".format(nextPlace,house_id))
+                nextUser = conn.execute("SELECT USERID FROM PLACEMENTS WHERE HOUSEID={0} AND PLACE={1} AND FUTURECODE=0;".format(house_id,nextPlace)).fetchone()[0]
+                conn.execute("INSERT INTO NOTIFICATIONS(TITLE,DESCRIPTION,ISREAD,USERID) " +
+                    "VALUES('Your Pick','You are up to pick a chore',FALSE,{0});".format(nextUser))
+            else:
+                conn.execute("UPDATE HOUSES SET CURRENTPHASE='C' WHERE HOUSEID={0};".format(house_id))
+
+                #move to own function, end draft logic
+                placements = conn.execute("SELECT * FROM PLACEMENTS WHERE HOUSEID={0}".format(house_id))
+                count = conn.execute("SELECT COUNT(*) FROM USERSTOHOUSES WHERE HOUSEID={0}".format(house_id)).fetchone()[0]
+                changes_obj = conn.execute("SELECT REVERTPLACEMENTS.REVERTTO,REVERTPLACEMENTS.PLACEMENTID FROM REVERTPLACEMENTS JOIN PLACEMENTS ON REVERTPLACEMENTS.PLACEMENTID=PLACEMENTS.PLACEMENTID " +
+                                       "WHERE PLACEMENTS.HOUSEID={0}".format(house_id))
+                changes = []
+                for row in changes_obj:
+                    temp = {}
+                    temp['revert_to'] = row[0]
+                    temp['placement_id'] = row[1]
+                    changes.append(temp)
+                
+                placement_org = []
+                for row in placements:
+                    temp = {}
+                    if (row[0] in [x['placement_id'] for x in changes]) and (row[3] == 0):
+                        revert = [x['revert_to'] for x in changes if x['placement_id'] == row[0]][0] 
+                        temp['placement_id'] = row[0]
+                        temp['user_id'] = revert
+                        temp['house_id'] = row[2]
+                        temp['future_code'] = (int(row[3])-1)%count
+                        temp['place'] = row[4]
+                        print(temp);
+                        conn.execute("DELETE FROM REVERTPLACEMENTS WHERE PLACEMENTID={0}".format(row[0]))
+                        placement_org.append(temp)
+                    else:
+                        temp['placement_id'] = row[0]
+                        temp['user_id'] = row[1]
+                        temp['house_id'] = row[2]
+                        temp['future_code'] = (int(row[3])-1)%count
+                        temp['place'] = row[4]
+                        placement_org.append(temp)
+                    
+                    if row[3] == 0:
+                        s = conn.execute("SELECT OFFERID FROM OFFEREDPLACEMENTS WHERE PLACEMENTID={0}".format(row[0]))
+                        for row in s:
+                            conn.execute("DELETE FROM OFFEREDCHORES WHERE OFFERID={0}".format(row[0]))
+                            conn.execute("DELETE FROM OFFEREDPLACEMENTS WHERE OFFERID={0}".format(row[0]))
+                            conn.execute("DELETE FROM OFFERS WHERE OFFERID={0}".format(row[0]))
+
+                conn.execute("DELETE FROM PLACEMENTS WHERE HOUSEID={0}".format(house_id))
+                for p in placement_org:
+                    conn.execute("INSERT INTO PLACEMENTS(PLACEMENTID,USERID,HOUSEID,FUTURECODE,PLACE) VALUES({0},{1},{2},{3},{4})".format(p['placement_id'],p['user_id'],p['house_id'],p['future_code'],p['place']))
+                
+            
+        except Exception as e:
+            response['message'] = "Failed with the following error: {0}".format(e)
+            traceback.print_exc()
+            response['returncode'] = 500
+            return response, 500
+        conn.commit()
+        conn.close()
+        response['message'] = "pick successful"
+        return response, 200
+
+class PlacementsGetByHouseAndUser(Resource):
+    def get(self,house_id,user_id):
+        @after_this_request
+        def add_header(response):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            return response
+
+        response = {"response": [], "message": "", "returncode": 200}
+        try:
+            conn = sqlite3.connect('api.db')
+            s = conn.execute("SELECT * FROM PLACEMENTS WHERE HOUSEID={0} AND USERID={1}".format(house_id,user_id))
+        except Exception as e:
+            response['message'] = "Failed with the following error: {0}".format(e)
+            response['returncode'] = 500
+            return response, 500
+        data = []
+        for row in s:
+            temp = {}
+            temp['placement_id'] = row[0]
+            temp['user_id'] = row[1]
+            temp['house_id'] = row[2]
+            temp['future_code'] = row[3]
+            temp['place'] = row[4]
+            data.append(temp)
+        conn.close()
+        if len(data) < 1:
+            response['message'] = "could not find any notifications for user with id {0}".format(user_id)
+            response['returncode'] = 400
+            return response, 200
+        response['message'] = "search successful"
+        response['response'] = data
+        return response, 200
+
+class OfferedPlacementsGetByOffer(Resource):
+    def get(self,offer_id):
+        @after_this_request
+        def add_header(response):
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            return response
+
+        response = {"response": [], "message": "", "returncode": 200}
+        try:
+            conn = sqlite3.connect('api.db')
+            s = conn.execute(
+                "SELECT * FROM OFFEREDPLACEMENTS " +
+                "WHERE OFFERID={0};".format(offer_id))
+        except Exception as e:
+            traceback.print_exc()
+            response['message'] = "Failed with the following error: {0}".format(e)
+            response['returncode'] = 500
+            return response, 500
+        data = []
+        for row in s:
+            temp = {}
+            temp['offer_id'] = row[0]
+            temp['placement_id'] = row[1]
+            temp['offer_side'] = row[2]
+            data.append(temp)
+        conn.close()
+        if len(data) < 1:
+            response['message'] = "could not any chores for offer with id {0}".format(offer_id)
+            response['returncode'] = 200
+            return response, 200
+        response['message'] = "search successful"
+        response['response'] = data
+        return response, 200
+
 api.add_resource(UserAdd, "/adduser")
 api.add_resource(HouseAdd, "/addhouse")
 api.add_resource(HouseGetByUser, "/gethousesbyuser/<int:id>")
@@ -668,6 +894,10 @@ api.add_resource(NotificationsGetUnseenByUser, "/getunseennotificationsbyuser/<i
 api.add_resource(OfferReject, "/rejectoffer/<int:offer_id>")
 api.add_resource(NotificationsSetSeen, "/setseennotifications")
 api.add_resource(NotificationAdd,"/addnotification")
+api.add_resource(CurrentPlacementGetByHouse, "/getcurrentplacementbyhouse/<int:house_id>")
+api.add_resource(MakeDraftPick, "/makedraftpick/<int:user_id>/<int:chore_id>")
+api.add_resource(PlacementsGetByHouseAndUser, "/getplacementsbyhouseanduser/<int:house_id>/<int:user_id>")
+api.add_resource(OfferedPlacementsGetByOffer, "/getofferedplacementsbyoffer/<int:offer_id>")
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
